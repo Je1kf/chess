@@ -22,7 +22,7 @@
 #    White : 0
 #    Black : 1
 #
-# Board is defined by a dictionary using conventional
+# Board is defined by a list using conventional
 # chess notation
 
 class chess:
