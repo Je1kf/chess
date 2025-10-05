@@ -20,7 +20,6 @@
 #    White : 0
 #    Black : 1
 #
-# Board is defined by a dictionary using conventional
 # chess notation
 
 class chess:
