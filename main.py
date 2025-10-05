@@ -1,8 +1,6 @@
 # Python chess player
 
 # ToDo
-# - Actual movement
-# - Taking a piece out
 # - Coronacion del peón
 # - function for checking mate
 # - function for checking draw
