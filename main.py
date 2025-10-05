@@ -22,7 +22,7 @@
 #    White : 0
 #    Black : 1
 #
-# Board is defined by a list using conventional
+# Board is defined by a dictionary using conventional
 # chess notation
 
 class chess:
@@ -32,6 +32,8 @@ class chess:
         self.back_rank = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         self.pieces = self.back_rank[0:5]
         self.pieces.append('p')
+        self.pieces_names = {'p': 'Pawn', 'R': 'Rook', 'N': 'Knight',
+                             'B': 'Bishop', 'Q': 'Queen', 'K': 'King'}
         self.pieces_points = {'R': 5, 'N': 2, 'B': 3, 'Q': 9, 'K': 4, 'p': 1}
         self.black = '\033[40m'
         self.white = '\033[44m'
@@ -80,6 +82,7 @@ class chess:
                 print('Not a legal movement, try again')
                 continue
             else:
+                self.degeneracy()
                 self.move_piece()
 
 
@@ -248,6 +251,16 @@ class chess:
                 self.legal_movement = True
         elif self.piece_to_move == 'p':
             self.pawn_movement()
+        elif self.piece_to_move == 'R':
+            self.rook_movement()
+        elif self.piece_to_move == 'B':
+            self.bishop_movement()
+        elif self.piece_to_move == 'Q':
+            self.queen_movement()
+        elif self.piece_to_move == 'K':
+            self.king_movement()
+        elif self.piece_to_move == 'N':
+            self.knight_movement()
 
         # Check if self.f_pos given by player is in self.possible_movements
         for i, imov in enumerate(self.possible_movements):
@@ -262,6 +275,41 @@ class chess:
 
         # ToDo p, R, N, B, Q, K
 
+    def degeneracy(self):
+        aux = []
+        for i in range(len(self.possible_movements)):
+            aux.append(self.possible_movements[i].count(self.f_pos))
+
+
+        x = False
+        print(aux)
+
+        if aux.count(1) > 1:
+            print("Degenerated movement.")
+            while x == False:
+                print(f"Which {self.pieces_names[self.piece_to_move]}", end="")
+                print(" do you want to move?")
+                alg = []
+
+                for i in range(len(aux)):
+                    if aux[i] == 1:
+                        alg.append(self.coords2alg(self.pieces_positions[self.to_move]\
+                                                   [self.piece_to_move]\
+                                                   [i]))
+
+                for i in range(len(alg)):
+                        print(f"\t{i}. {alg[i][0]}")
+
+                mov = int(input())
+                print(alg[mov][0][0])
+                try:
+                    mov = self.alg2coords(alg[mov][0])
+                except:
+                    print("Try again.")
+                else:
+                    x = True
+
+            self.i_pos = mov
 
 
     def move_piece(self):
@@ -284,13 +332,15 @@ class chess:
                     # one step forward
                     self.possible_movements[i].append([pos[0], pos[1]+x])
                 if pos[0]+1<8:
-                    if self.board[pos[0]+1][pos[1]+x][0] != '':
+                    if (self.board[pos[0]+1][pos[1]+x][0] != ''
+                       and self.board[pos[0]+1][pos[1]+x][1] != self.to_move
+                       ):
                         # right-hand side capture
                         self.possible_movements[i].append([pos[0]+1, pos[1]+x])
-                print(print(pos))
                 if pos[0]-1>=0:
-                    if self.board[pos[0]-1][pos[1]+x][0] != '':
-                        print('hola')
+                    if (self.board[pos[0]-1][pos[1]+x][0] != ''
+                       and self.board[pos[0]-1][pos[1]+x][1] != self.to_move
+                       ):
                         # left-hand side capture
                         self.possible_movements[i].append([pos[0]-1, pos[1]+x])
 
@@ -301,6 +351,220 @@ class chess:
                    ):
                     # two steps forward
                     self.possible_movements[i].append([pos[0], pos[1]+2*x])
+
+
+    def rook_movement(self):
+        p_pos = self.pieces_positions[self.to_move]['R']  # Rook's positions
+        self.possible_movements = []
+
+        for i, pos in enumerate(p_pos):
+            self.possible_movements.append([])
+            ix = 1
+
+            # Possible positions increasing and decreasing rows
+            for j in [1, -1]:
+                ix = j
+                while (pos[1] + ix) < 8 and (pos[1] + ix) >= 0:
+                    if (
+                        self.board[pos[0]][pos[1]+ix][0] == ''
+                        or self.board[pos[0]][pos[1]+ix][1] != self.to_move
+                        ):
+                        self.possible_movements[i].append([pos[0], pos[1]+ix])
+                    if self.board[pos[0]][pos[1]+ix][0] != '':
+                        break
+
+
+                    ix = ix + j
+
+
+            # Possible positions increasing and decreasing columns
+            for j in [1, -1]:
+                ix = j
+                while (pos[0] + ix) < 8 and (pos[0] + ix) >= 0:
+                    if (
+                        self.board[pos[0]+ix][pos[1]][0] == ''
+                        or self.board[pos[0]+ix][pos[1]][1] != self.to_move
+                        ):
+                        self.possible_movements[i].append([pos[0]+ix, pos[1]])
+                    if self.board[pos[0]+ix][pos[1]][0] != '':
+                        break
+
+
+                    ix = ix + j
+
+
+    def bishop_movement(self):
+        p_pos = self.pieces_positions[self.to_move]['B']  # Bishop's positions
+        self.possible_movements = []
+
+        for i, pos in enumerate(p_pos):
+            self.possible_movements.append([])
+            ix = 1
+
+            # Possible positions increasing and decreasing \
+            for j in [1, -1]:
+                ix = j
+                while (
+                       (pos[1] + ix) < 8 and (pos[1] + ix) >= 0
+                       and (pos[0] - ix) < 8 and (pos[0] - ix) >= 0
+                      ):
+                    if (
+                        self.board[pos[0]-ix][pos[1]+ix][0] == ''
+                        or self.board[pos[0]-ix][pos[1]+ix][1] != self.to_move
+                        ):
+                        self.possible_movements[i].append([pos[0]-ix,
+                                                           pos[1]+ix])
+                    if self.board[pos[0]-ix][pos[1]+ix][0] != '':
+                        break
+
+
+                    ix = ix + j
+
+
+            # Possible positions increasing and decreasing /
+            for j in [1, -1]:
+                ix = j
+                while (
+                       (pos[1] + ix) < 8 and (pos[1] + ix) >= 0
+                       and (pos[0] + ix) < 8 and (pos[0] + ix) >= 0
+                      ):
+                    if (
+                        self.board[pos[0]+ix][pos[1]+ix][0] == ''
+                        or self.board[pos[0]+ix][pos[1]+ix][1] != self.to_move
+                        ):
+                        self.possible_movements[i].append([pos[0]+ix,
+                                                           pos[1]+ix])
+                    if self.board[pos[0]+ix][pos[1]+ix][0] != '':
+                        break
+
+
+                    ix = ix + j
+
+
+    def queen_movement(self):
+            p_pos = self.pieces_positions[self.to_move]['Q']  # Queen's positions
+            self.possible_movements = []
+
+            for i, pos in enumerate(p_pos):
+                self.possible_movements.append([])
+                ix = 1
+
+                # Possible positions increasing and decreasing rows
+                for j in [1, -1]:
+                    ix = j
+                    while (pos[1] + ix) < 8 and (pos[1] + ix) >= 0:
+                        if (
+                            self.board[pos[0]][pos[1]+ix][0] == ''
+                            or self.board[pos[0]][pos[1]+ix][1] != self.to_move
+                            ):
+                            self.possible_movements[i].append([pos[0], pos[1]+ix])
+                        if self.board[pos[0]][pos[1]+ix][0] != '':
+                            break
+
+
+                        ix = ix + j
+
+
+                # Possible positions increasing and decreasing columns
+                for j in [1, -1]:
+                    ix = j
+                    while (pos[0] + ix) < 8 and (pos[0] + ix) >= 0:
+                        if (
+                            self.board[pos[0]+ix][pos[1]][0] == ''
+                            or self.board[pos[0]+ix][pos[1]][1] != self.to_move
+                            ):
+                            self.possible_movements[i].append([pos[0]+ix, pos[1]])
+                        if self.board[pos[0]+ix][pos[1]][0] != '':
+                            break
+
+
+                        ix = ix + j
+
+
+                # Possible positions increasing and decreasing \
+                for j in [1, -1]:
+                    ix = j
+                    while (
+                           (pos[1] + ix) < 8 and (pos[1] + ix) >= 0
+                           and (pos[0] - ix) < 8 and (pos[0] - ix) >= 0
+                          ):
+                        if (
+                            self.board[pos[0]-ix][pos[1]+ix][0] == ''
+                            or self.board[pos[0]-ix][pos[1]+ix][1] != self.to_move
+                            ):
+                            self.possible_movements[i].append([pos[0]-ix,
+                                                               pos[1]+ix])
+                        if self.board[pos[0]-ix][pos[1]+ix][0] != '':
+                            break
+
+
+                        ix = ix + j
+
+
+                # Possible positions increasing and decreasing /
+                for j in [1, -1]:
+                    ix = j
+                    while (
+                           (pos[1] + ix) < 8 and (pos[1] + ix) >= 0
+                           and (pos[0] + ix) < 8 and (pos[0] + ix) >= 0
+                          ):
+                        if (
+                            self.board[pos[0]+ix][pos[1]+ix][0] == ''
+                            or self.board[pos[0]+ix][pos[1]+ix][1] != self.to_move
+                            ):
+                            self.possible_movements[i].append([pos[0]+ix,
+                                                               pos[1]+ix])
+                        if self.board[pos[0]+ix][pos[1]+ix][0] != '':
+                            break
+
+
+                        ix = ix + j
+
+
+    def king_movement(self):
+            p_pos = self.pieces_positions[self.to_move]['K']  # King's positions
+            self.possible_movements = []
+
+            for i, pos in enumerate(p_pos):
+                self.possible_movements.append([])
+
+                for ix in [-1, 0, 1]:
+                    for jx in [-1, 0, 1]:
+                        if (
+                            pos[0]+ix < 8 and pos[0]+ix >= 0
+                            and pos[1]+jx < 8 and pos[1]+jx >= 0
+                            and [ix, jx] != [0, 0]
+                            # Checking checks would be here
+                           ):
+                            if (
+                                self.board[pos[0]+ix][pos[1]+jx][0] == ''
+                                or self.board[pos[0]+ix][pos[1]+jx][1] != self.to_move
+                               ):
+                                self.possible_movements[i].append([pos[0]+ix,
+                                                                   pos[1]+jx])
+
+
+    def knight_movement(self):
+            p_pos = self.pieces_positions[self.to_move]['N']  # Knight's positions
+            self.possible_movements = []
+
+            for i, pos in enumerate(p_pos):
+                self.possible_movements.append([])
+
+                for ix in [1, -1, 2, -2]:
+                    for jx in [3-abs(ix), abs(ix)-3]:
+                        if (
+                            pos[0]+ix < 8 and pos[0]+ix >= 0
+                            and pos[1]+jx < 8 and pos[1]+jx >= 0
+                           ):
+                            if (
+                                self.board[pos[0]+ix][pos[1]+jx][0] == ''
+                                or self.board[pos[0]+ix][pos[1]+jx][1] != self.to_move
+                               ):
+                                self.possible_movements[i].append([pos[0]+ix,
+                                                                   pos[1]+jx])
+
+
 
 
 game1 = chess()
